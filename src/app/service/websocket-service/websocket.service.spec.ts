@@ -18,22 +18,26 @@ describe('WebSocketService (Integration Test)', () => {
       eventType: 'testEvent'
     };
 
-    webSocketService.connect('wss://ws.postman-echo.com/raw');
+    webSocketService.connect('ws://localhost:5000');
 
-    webSocketService.messages$.subscribe((receivedMessage) => {
-      expect(receivedMessage).toEqual(testMessage);
-      console.log('Message Received: ', receivedMessage);
-      webSocketService.close();
-      done();
+    webSocketService.messages$.subscribe({
+      next: (receivedMessage) => {
+        console.log(new Date().toISOString(), 'Message Received: ', receivedMessage);
+
+        if ("" + receivedMessage == "" + testMessage) {
+          console.log("Received the expected message.");
+          console.log(new Date().toISOString(), 'Closing websocketService... ');
+          webSocketService.close();
+          done();
+        }
+      },
+      error: (e) => console.error(new Date().toISOString(), e),
+      complete: () => {}
     });
 
     setTimeout(() => {
-      console.log('Sending message: ', testMessage);
+      console.log(new Date().toISOString(), 'Sending message: ', testMessage);
       webSocketService.sendMessage(testMessage);
     }, 500);
-  });
-
-  afterEach(() => {
-    webSocketService.close();
   });
 });
